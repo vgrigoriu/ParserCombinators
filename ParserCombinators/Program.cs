@@ -2,11 +2,30 @@
 
 namespace ParserCombinators
 {
-    class Program
+    internal static class Program
     {
-        static void Main(string[] args)
+        private static void Main()
         {
-            Console.WriteLine("Hello World!");
+            Console.WriteLine(Parse.A("ABC"));
+            Console.WriteLine(Parse.A("ZBC"));
+        }
+    }
+
+    internal static class Parse
+    {
+        internal static (bool, string) A(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+            {
+                return (false, string.Empty);
+            }
+
+            if (str[0] == 'A')
+            {
+                return (true, str.Substring(1));
+            }
+
+            return (false, str);
         }
     }
 }
