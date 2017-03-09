@@ -12,22 +12,72 @@ namespace ParserCombinators
         }
     }
 
-    internal static class Parse
+    public static class Parse
     {
-        internal static (string, string) Char(char toMatch, string str)
+        public static Result<(char, string)> Char(char toMatch, string str)
         {
             if (string.IsNullOrEmpty(str))
             {
-                return ("No more input", string.Empty);
+                return Failure("No more input");
             }
 
             var first = str[0];
             if (first == toMatch)
             {
-                return ($"Found '{toMatch}'", str.Substring(1));
+                return Success.Of((toMatch, str.Substring(1)));
             }
 
-            return ($"Expecting '{toMatch}'. Got '{first}'.", str);
+            return Failure($"Expecting '{toMatch}'. Got '{first}'.");
+        }
+
+        private static Failure<(char, string)> Failure(string message)
+        {
+            return new Failure<(char, string)>(message);
+        }
+    }
+
+    public abstract class Result<T>
+    {
+        internal protected Result()
+        {
+        }
+    }
+
+    public sealed class Success<T> : Result<T>
+    {
+        public Success(T value)
+        {
+            Value = value;
+        }
+
+        public T Value { get; }
+
+        public override string ToString()
+        {
+            return $"Success {Value}";
+        }
+    }
+
+    public static class Success
+    {
+        public static Success<T> Of<T>(T value)
+        {
+            return new Success<T>(value);
+        }
+    }
+
+    public sealed class Failure<T> : Result<T>
+    {
+        public Failure(string message)
+        {
+            Message = message;
+        }
+
+        public string Message { get; }
+
+        public override string ToString()
+        {
+            return $"Failure \"{Message}\"";
         }
     }
 }
