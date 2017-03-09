@@ -6,26 +6,28 @@ namespace ParserCombinators
     {
         private static void Main()
         {
-            Console.WriteLine(Parse.A("ABC"));
-            Console.WriteLine(Parse.A("ZBC"));
+            Console.WriteLine(Parse.Char('A', "ABC"));
+            Console.WriteLine(Parse.Char('A', "ZBC"));
+            Console.WriteLine(Parse.Char('A', string.Empty));
         }
     }
 
     internal static class Parse
     {
-        internal static (bool, string) A(string str)
+        internal static (string, string) Char(char toMatch, string str)
         {
             if (string.IsNullOrEmpty(str))
             {
-                return (false, string.Empty);
+                return ("No more input", string.Empty);
             }
 
-            if (str[0] == 'A')
+            var first = str[0];
+            if (first == toMatch)
             {
-                return (true, str.Substring(1));
+                return ($"Found '{toMatch}'", str.Substring(1));
             }
 
-            return (false, str);
+            return ($"Expecting '{toMatch}'. Got '{first}'.", str);
         }
     }
 }
