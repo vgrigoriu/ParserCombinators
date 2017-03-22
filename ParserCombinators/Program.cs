@@ -15,10 +15,22 @@ namespace ParserCombinators
             Console.WriteLine(aParser(string.Empty));
 
             Parser<char> bParser = Parse.Char('B');
-            var abParser = aParser.AndThen(bParser);
-            Console.WriteLine(abParser("ABC"));
-            Console.WriteLine(abParser("ZBC"));
-            Console.WriteLine(abParser("AZC"));
+            var aAndBParser = aParser.AndThen(bParser);
+            Console.WriteLine(aAndBParser("ABC"));
+            Console.WriteLine(aAndBParser("ZBC"));
+            Console.WriteLine(aAndBParser("AZC"));
+
+            var aOrBParser = aParser.OrElse(bParser);
+            Console.WriteLine(aOrBParser("AZZ"));
+            Console.WriteLine(aOrBParser("BZZ"));
+            Console.WriteLine(aOrBParser("CZZ"));
+
+            Parser<char> cParser = Parse.Char('C');
+            var aAndBOrC = aParser.AndThen(bParser.OrElse(cParser));
+            Console.WriteLine(aAndBOrC("ABZ"));
+            Console.WriteLine(aAndBOrC("ACZ"));
+            Console.WriteLine(aAndBOrC("QBZ"));
+            Console.WriteLine(aAndBOrC("AQZ"));
         }
     }
 
@@ -65,7 +77,21 @@ namespace ParserCombinators
                         break;
                 }
 
-                return Failure<IEnumerable<T>>("switch was not exhaustive");
+                return Failure<IEnumerable<T>>("AndThen: switch was not exhaustive");
+            };
+        }
+
+        public static Parser<T> OrElse<T>(this Parser<T> parser1, Parser<T> parser2)
+        {
+            return str =>
+            {
+                switch (parser1(str))
+                {
+                    case Success<(T, string)> s1:
+                        return s1;
+                    default:
+                        return parser2(str);
+                }
             };
         }
 
