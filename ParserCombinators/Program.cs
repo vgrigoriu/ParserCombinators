@@ -6,28 +6,32 @@ namespace ParserCombinators
     {
         private static void Main()
         {
-            Console.WriteLine(Parse.Char('A', "ABC"));
-            Console.WriteLine(Parse.Char('A', "ZBC"));
-            Console.WriteLine(Parse.Char('A', string.Empty));
+            var aParser = Parse.Char('A');
+            Console.WriteLine(aParser("ABC"));
+            Console.WriteLine(aParser("ZBC"));
+            Console.WriteLine(aParser(string.Empty));
         }
     }
 
     public static class Parse
     {
-        public static Result<(char, string)> Char(char toMatch, string str)
+        public static Func<string, Result<(char, string)>> Char(char toMatch)
         {
-            if (string.IsNullOrEmpty(str))
+            return str =>
             {
-                return Failure("No more input");
-            }
+                if (string.IsNullOrEmpty(str))
+                {
+                    return Failure("No more input");
+                }
 
-            var first = str[0];
-            if (first == toMatch)
-            {
-                return Success.Of((toMatch, str.Substring(1)));
-            }
+                var first = str[0];
+                if (first == toMatch)
+                {
+                    return Success.Of((toMatch, str.Substring(1)));
+                }
 
-            return Failure($"Expecting '{toMatch}'. Got '{first}'.");
+                return Failure($"Expecting '{toMatch}'. Got '{first}'.");
+            };
         }
 
         private static Failure<(char, string)> Failure(string message)
