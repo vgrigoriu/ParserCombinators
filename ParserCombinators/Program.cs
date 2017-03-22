@@ -15,7 +15,7 @@ namespace ParserCombinators
             Console.WriteLine(aParser(string.Empty));
 
             Parser<char> bParser = Parse.Char('B');
-            var abParser = Parse.AndThen(aParser, bParser);
+            var abParser = aParser.AndThen(bParser);
             Console.WriteLine(abParser("ABC"));
             Console.WriteLine(abParser("ZBC"));
             Console.WriteLine(abParser("AZC"));
@@ -43,7 +43,7 @@ namespace ParserCombinators
             };
         }
 
-        public static Parser<IEnumerable<T>> AndThen<T>(Parser<T> parser1, Parser<T> parser2)
+        public static Parser<IEnumerable<T>> AndThen<T>(this Parser<T> parser1, Parser<T> parser2)
         {
             return str =>
             {
