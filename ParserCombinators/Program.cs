@@ -2,11 +2,13 @@
 
 namespace ParserCombinators
 {
+    public delegate Result<(char, string)> Parser(string str);
+
     internal static class Program
     {
         private static void Main()
         {
-            var aParser = Parse.Char('A');
+            Parser aParser = Parse.Char('A');
             Console.WriteLine(aParser("ABC"));
             Console.WriteLine(aParser("ZBC"));
             Console.WriteLine(aParser(string.Empty));
@@ -15,7 +17,7 @@ namespace ParserCombinators
 
     public static class Parse
     {
-        public static Func<string, Result<(char, string)>> Char(char toMatch)
+        public static Parser Char(char toMatch)
         {
             return str =>
             {
