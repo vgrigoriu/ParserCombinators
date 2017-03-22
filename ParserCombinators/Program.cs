@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ParserCombinators
 {
-    public delegate Result<(T, string)> Parser<T>(string str);
+    public delegate Result<(T value, string remaining)> Parser<T>(string str);
 
     internal static class Program
     {
@@ -31,6 +33,10 @@ namespace ParserCombinators
             Console.WriteLine(aAndBOrC("ACZ"));
             Console.WriteLine(aAndBOrC("QBZ"));
             Console.WriteLine(aAndBOrC("AQZ"));
+
+            var parseLowercase = Parse.AnyOf("abcdefghijklmnopqrstuvwxyz");
+            Console.WriteLine(parseLowercase("aBC"));
+            Console.WriteLine(parseLowercase("ABC"));
         }
     }
 
@@ -93,6 +99,16 @@ namespace ParserCombinators
                         return parser2(str);
                 }
             };
+        }
+
+        public static Parser<T> Choice<T>(this IEnumerable<Parser<T>> parsers)
+        {
+            return parsers.Aggregate(OrElse);
+        }
+
+        public static Parser<char> AnyOf(IEnumerable<char> chars)
+        {
+            return chars.Select(Char).Choice();
         }
 
         private static IEnumerable<T> Pair<T>(T t1, T t2)
