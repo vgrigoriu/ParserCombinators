@@ -42,11 +42,14 @@ namespace ParserCombinators
             var parseThreeDigits = parseDigit.AndThen(parseDigit).AndThen(parseDigit);
             Console.WriteLine(parseThreeDigits("135Z"));
 
-            var threeDigitsStringParser = Parse.Map(CharTupleToString, parseThreeDigits);
+            var threeDigitsStringParser = parseThreeDigits.Select(CharTupleToString);
             Console.WriteLine(threeDigitsStringParser("135Z"));
 
-            var threeDigitsIntParser = Parse.Map(int.Parse, threeDigitsStringParser);
+            var threeDigitsIntParser = threeDigitsStringParser.Select(int.Parse);
             Console.WriteLine(threeDigitsIntParser("135Z"));
+
+            var appP = Parse.Lift2((x, y) => x + y, threeDigitsIntParser, threeDigitsIntParser);
+            Console.WriteLine(appP("123456"));
 
             string CharTupleToString(((char c1, char c2) t1, char c3) p)
             {
@@ -126,7 +129,7 @@ namespace ParserCombinators
             return chars.Select(Char).Choice();
         }
 
-        public static Parser<T2> Map<T1, T2>(Func<T1, T2> f, Parser<T1> parser)
+        public static Parser<T2> Select<T1, T2>(this Parser<T1> parser, Func<T1, T2> f)
         {
             return str =>
             {
@@ -140,6 +143,27 @@ namespace ParserCombinators
                         return Failure<T2>("Map: switch was not exhaustive");
                 }
             };
+        }
+
+        public static Parser<T> Return<T>(T value)
+        {
+            return str => Success.Of((value, str));
+        }
+
+        public static Parser<T2> Apply<T1, T2>(this Parser<T1> parserOfT1, Parser<Func<T1, T2>> parserOfFunc)
+        {
+            Parser<(Func<T1, T2>, T1)> parserOfFAndX = parserOfFunc.AndThen(parserOfT1);
+            return parserOfFAndX.Select<(Func<T1, T2>, T1), T2>(((Func<T1, T2> f, T1 x) p) => p.f(p.x));
+        }
+
+        public static Parser<TReturn> Lift2<T1, T2, TReturn>(Func<T1, Func<T2, TReturn>> f, Parser<T1> x, Parser<T2> y)
+        {
+            return y.Apply(x.Apply(Return(f)));
+        }
+
+        public static Parser<TReturn> Lift2<T1, T2, TReturn>(Func<T1, T2, TReturn> f, Parser<T1> xP, Parser<T2> yP)
+        {
+            return Lift2<T1, T2, TReturn>(x => y => f(x, y), xP, yP);
         }
 
         private static Failure<(T, string)> Failure<T>(string message)
