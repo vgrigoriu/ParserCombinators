@@ -41,6 +41,17 @@ namespace ParserCombinators
             var parseDigit = Parse.AnyOf("0123456789");
             var parseThreeDigits = parseDigit.AndThen(parseDigit).AndThen(parseDigit);
             Console.WriteLine(parseThreeDigits("135Z"));
+
+            var threeDigitsStringParser = Parse.Map(CharTupleToString, parseThreeDigits);
+            Console.WriteLine(threeDigitsStringParser("135Z"));
+
+            var threeDigitsIntParser = Parse.Map(int.Parse, threeDigitsStringParser);
+            Console.WriteLine(threeDigitsIntParser("135Z"));
+
+            string CharTupleToString(((char c1, char c2) t1, char c3) p)
+            {
+                return new String(new[] { p.t1.c1, p.t1.c2, p.c3 });
+            }
         }
     }
 
@@ -113,6 +124,22 @@ namespace ParserCombinators
         public static Parser<char> AnyOf(IEnumerable<char> chars)
         {
             return chars.Select(Char).Choice();
+        }
+
+        public static Parser<T2> Map<T1, T2>(Func<T1, T2> f, Parser<T1> parser)
+        {
+            return str =>
+            {
+                switch (parser(str)) {
+                    case Failure<(T1, string)> failure:
+                        return Failure<T2>(failure.Message);
+                    case Success<(T1, string)> success:
+                        (T1 value, string remaining) = success.Value;
+                        return Success.Of((f(value), remaining));
+                    default:
+                        return Failure<T2>("Map: switch was not exhaustive");
+                }
+            };
         }
 
         private static Failure<(T, string)> Failure<T>(string message)
