@@ -48,8 +48,8 @@ namespace ParserCombinators
             var threeDigitsIntParser = threeDigitsStringParser.Select(int.Parse);
             Console.WriteLine(threeDigitsIntParser("135Z"));
 
-            var appP = Parse.Lift2((x, y) => x + y, threeDigitsIntParser, threeDigitsIntParser);
-            Console.WriteLine(appP("123456"));
+            var parseThenAdd = Parse.Lift2((x, y) => x + y, threeDigitsIntParser, threeDigitsIntParser);
+            Console.WriteLine(parseThenAdd("100456"));
 
             string CharTupleToString(((char c1, char c2) t1, char c3) p)
             {
