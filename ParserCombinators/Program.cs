@@ -37,6 +37,10 @@ namespace ParserCombinators
             var parseLowercase = Parse.AnyOf("abcdefghijklmnopqrstuvwxyz");
             Console.WriteLine(parseLowercase("aBC"));
             Console.WriteLine(parseLowercase("ABC"));
+
+            var parseDigit = Parse.AnyOf("0123456789");
+            var parseThreeDigits = parseDigit.AndThen(parseDigit).AndThen(parseDigit);
+            Console.WriteLine(parseThreeDigits("135Z"));
         }
     }
 
@@ -61,29 +65,29 @@ namespace ParserCombinators
             };
         }
 
-        public static Parser<IEnumerable<T>> AndThen<T>(this Parser<T> parser1, Parser<T> parser2)
+        public static Parser<(T1, T2)> AndThen<T1, T2>(this Parser<T1> parser1, Parser<T2> parser2)
         {
             return str =>
             {
                 switch (parser1(str))
                 {
-                    case Failure<(T, string)> f:
-                        return Failure<IEnumerable<T>>(f.Message);
-                    case Success<(T, string)> s1:
-                        (T value1, string remaining1) = s1.Value;
+                    case Failure<(T1, string)> f:
+                        return Failure<(T1, T2)>(f.Message);
+                    case Success<(T1, string)> s1:
+                        (T1 value1, string remaining1) = s1.Value;
                         switch (parser2(remaining1))
                         {
-                            case Failure<(T, string)> f:
-                                return Failure<IEnumerable<T>>(f.Message);
-                            case Success<(T, string)> s2:
+                            case Failure<(T2, string)> f:
+                                return Failure<(T1, T2)>(f.Message);
+                            case Success<(T2, string)> s2:
                                 (var value2, var remaining2) = s2.Value;
-                                return Success.Of((Pair(value1, value2), remaining2));
+                                return Success.Of(((value1, value2), remaining2));
                         }
 
                         break;
                 }
 
-                return Failure<IEnumerable<T>>("AndThen: switch was not exhaustive");
+                return Failure<(T1, T2)>("AndThen: switch was not exhaustive");
             };
         }
 
@@ -109,12 +113,6 @@ namespace ParserCombinators
         public static Parser<char> AnyOf(IEnumerable<char> chars)
         {
             return chars.Select(Char).Choice();
-        }
-
-        private static IEnumerable<T> Pair<T>(T t1, T t2)
-        {
-            yield return t1;
-            yield return t2;
         }
 
         private static Failure<(T, string)> Failure<T>(string message)
